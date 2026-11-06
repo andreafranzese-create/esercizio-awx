@@ -1,0 +1,20 @@
+---
+- name: Preleva sorgente Java dalla VM
+  hosts: all
+  gather_facts: false
+
+  vars:
+    src_path: /opt/app/esempio.java
+
+  tasks:
+    - name: Leggi il file dalla VM
+      ansible.builtin.slurp:
+        src: "{{ src_path }}"
+      register: java_src
+
+    - name: Salva nome e contenuto negli artifacts del job AWX
+      ansible.builtin.set_stats:
+        data:
+          java_filename: "{{ src_path | basename }}"
+          java_b64: "{{ java_src.content }}"
+        per_host: false
