@@ -1,5 +1,4 @@
 ---
----
 - name: Preleva nginx.conf dalla VM
   hosts: all
   gather_facts: false
@@ -18,4 +17,3 @@
         data:
           filename: "{{ src_path | basename }}"
           content_b64: "{{ conf_src.content }}"
-        per_host: false
