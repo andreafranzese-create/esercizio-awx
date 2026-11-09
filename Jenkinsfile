@@ -30,6 +30,7 @@ pipeline {
     stage('Crea artefatto') {
       steps {
         sh '''
+          set +x
           mkdir -p src
           echo "$CONTENT_B64" | base64 -d > "src/$FILENAME"
         '''
@@ -40,7 +41,7 @@ pipeline {
     stage('Validazione') {
       steps {
         sh '''
-          docker run --rm -v "$PWD/src/$FILENAME":/etc/nginx/nginx.conf:ro nginx:stable nginx -t
+          docker run --rm -v "$PWD/src/$FILENAME":/etc/nginx/nginx.conf:ro,Z nginx:stable nginx -t
         '''
       }
     }
