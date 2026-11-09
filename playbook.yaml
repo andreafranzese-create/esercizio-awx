@@ -19,15 +19,3 @@
         data:
           java_filename: "{{ src_path | basename }}"
           java_b64: "{{ java_src.content }}"
-
-    - name: Invia il file al webhook di Jenkins
-      ansible.builtin.uri:
-        url: "{{ jenkins_url }}/generic-webhook-trigger/invoke?token={{ jenkins_token }}"
-        method: POST
-        body_format: json
-        body:
-          awx_job_id: "{{ awx_job_id }}"
-          filename: "{{ src_path | basename }}"
-          content_b64: "{{ java_src.content }}"
-        status_code: 200
-      delegate_to: localhost
