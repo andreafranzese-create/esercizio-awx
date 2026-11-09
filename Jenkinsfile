@@ -37,14 +37,11 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Validazione') {
       steps {
         sh '''
-          mkdir -p out
-          javac -d out "src/$FILENAME"
-          java -cp out "${FILENAME%.java}"
+          docker run --rm -v "$PWD/src/$FILENAME":/etc/nginx/nginx.conf:ro nginx:stable nginx -t
         '''
-        archiveArtifacts artifacts: 'out/*.class'
       }
     }
   }

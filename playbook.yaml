@@ -4,7 +4,7 @@
   gather_facts: false
 
   vars:
-    src_path: /opt/app/esempio.java
+    src_path: /etc/nginx/nginx.conf
     jenkins_url: "http://192.168.56.12:8080"
     jenkins_token: awx-java-build
 
