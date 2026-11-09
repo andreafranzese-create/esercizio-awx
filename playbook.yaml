@@ -1,21 +1,21 @@
 ---
-- name: Preleva sorgente Java dalla VM
+---
+- name: Preleva nginx.conf dalla VM
   hosts: all
   gather_facts: false
 
   vars:
     src_path: /etc/nginx/nginx.conf
-    jenkins_url: "http://192.168.56.12:8080"
-    jenkins_token: awx-java-build
 
   tasks:
     - name: Leggi il file dalla VM
       ansible.builtin.slurp:
         src: "{{ src_path }}"
-      register: java_src
+      register: conf_src
 
     - name: Salva nome e contenuto negli artifacts del job AWX
       ansible.builtin.set_stats:
         data:
-          java_filename: "{{ src_path | basename }}"
-          java_b64: "{{ java_src.content }}"
+          filename: "{{ src_path | basename }}"
+          content_b64: "{{ conf_src.content }}"
+        per_host: false
