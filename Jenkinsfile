@@ -8,7 +8,7 @@ pipeline {
         [key: 'CONTENT_B64', value: '$.content_b64'],
         [key: 'AWX_JOB_ID',  value: '$.awx_job_id']
       ],
-      token: 'awx-java-build',
+      token: 'awx-nginx-build',
       causeString: 'Triggerato da AWX job $AWX_JOB_ID',
       printContributedVariables: false,
       printPostContent: false

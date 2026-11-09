@@ -26,7 +26,7 @@ AWX entra nella VM via SSH e legge `nginx.conf`. Il contenuto viene codificato i
 
 Notifica di tipo **Webhook** associata al Job Template sull'evento **Success**:
 
-- **Target URL**: `http://<IP-JENKINS>:8080/generic-webhook-trigger/invoke?token=awx-java-build`
+- **Target URL**: `http://<IP-JENKINS>:8080/generic-webhook-trigger/invoke?token=awx-nginx-build`
 - **HTTP Method**: `POST`, header `{"Content-Type": "application/json"}`
 - **Success message body**:
 
