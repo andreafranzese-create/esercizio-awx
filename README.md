@@ -40,7 +40,7 @@ Al momento dell'invio AWX sostituisce le variabili con i dati del job: `job.id` 
 
 **`agent { label 'podman' }`** – gli stage girano sull'agent con label `podman`, non sul controller. Il controller riceve solo il webhook e conserva gli artefatti.
 
-**`triggers`** – il plugin Generic Webhook Trigger avvia la pipeline quando arriva un POST con `token=awx-java-build` ed estrae i campi del JSON (JSONPath `$.campo`) in variabili d'ambiente.
+**`triggers`** – il plugin Generic Webhook Trigger avvia la pipeline quando arriva un POST con `token=awx-nginx-build` ed estrae i campi del JSON (JSONPath `$.campo`) in variabili d'ambiente.
 
 | Stage | Cosa fa |
 |---|---|
