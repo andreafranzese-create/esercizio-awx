@@ -13,15 +13,28 @@ Costruire una catena automatizzata tra tre strumenti:
 
 ![Flusso dell'esercizio](img/jenkins-awx.jpg)
 
-AWX entra nella VM via SSH e legge `nginx.conf`. Il contenuto viene codificato in **base64** (così a capo e caratteri speciali non rompono il JSON) e inviato con un POST al webhook di Jenkins. Il controller Jenkins riconosce il token, scarica il `Jenkinsfile` da GitHub e fa eseguire la pipeline sull'agent: il file viene ricostruito, archiviato come artefatto e validato con `nginx -t` dentro un container nginx.
+AWX entra nella VM via SSH e legge `nginx.conf`. Il contenuto viene codificato in **base64** (così a capo e caratteri speciali non rompono il JSON) e salvato negli **artifacts** del job. A fine job, una **notifica Webhook** di AWX lo invia con un POST al webhook di Jenkins. Il controller Jenkins riconosce il token, scarica il `Jenkinsfile` da GitHub e fa eseguire la pipeline sull'agent: il file viene ricostruito, archiviato come artefatto e validato con `nginx -t` dentro un container nginx.
 
 ## Il playbook (`playbook.yaml`)
 
 | Task | Cosa fa |
 |---|---|
 | **Leggi il file** | `slurp` legge `nginx.conf` sulla VM e lo restituisce già in base64. A differenza di `fetch` non salva nulla sul disco del container AWX, che viene distrutto a fine job. |
-| **Salva negli artifacts** | `set_stats` lega nome e contenuto al job AWX: restano visibili nella pagina del job come traccia di cosa è stato prelevato. |
-| **Invia a Jenkins** | `uri` fa il POST al webhook con un JSON di tre campi. `body_format: json` costruisce il JSON e l'header. `delegate_to: localhost` fa partire la chiamata da AWX e non dalla VM. `status_code: 200` fa fallire il job se Jenkins non risponde correttamente. `awx_job_id` è iniettata da AWX in ogni job. |
+| **Salva negli artifacts** | `set_stats` (con `per_host: false`) salva nome e contenuto come artifacts del job (`filename`, `content_b64`). È l'unico modo per far sopravvivere il dato alla fine del job: la notifica viene generata dopo e può leggere solo i dati salvati sul job. |
+
+## Il webhook (Notification Template)
+
+Notifica di tipo **Webhook** associata al Job Template sull'evento **Success**:
+
+- **Target URL**: `http://<IP-JENKINS>:8080/generic-webhook-trigger/invoke?token=awx-java-build`
+- **HTTP Method**: `POST`, header `{"Content-Type": "application/json"}`
+- **Success message body**:
+
+```json
+{"awx_job_id": "{{ job.id }}", "filename": "{{ job.artifacts.filename | default('') }}", "content_b64": "{{ job.artifacts.content_b64 | default('') }}"}
+```
+
+Al momento dell'invio AWX sostituisce le variabili con i dati del job: `job.id` è il numero del job, `job.artifacts.*` sono i dati salvati da `set_stats`. I nomi a sinistra sono i campi letti dal Jenkinsfile (`$.filename`, `$.content_b64`).
 
 ## La pipeline (`Jenkinsfile`)
 
@@ -43,6 +56,7 @@ AWX entra nella VM via SSH e legge `nginx.conf`. Il contenuto viene codificato i
 - **Inventory** `vms`: un host, l'IP della VM.
 - **Project**: repo GitHub con playbook e Jenkinsfile
 - **Job Template**: project + `playbook.yaml` + inventory `vms` + credential `rocky-ssh`.
+- **Notification Template** di tipo *Webhook* verso Jenkins, attivata sul Job Template per l'evento **Success**.
 
 ### Jenkins
 - **Plugin**: *Generic Webhook Trigger*.
@@ -51,5 +65,5 @@ AWX entra nella VM via SSH e legge `nginx.conf`. Il contenuto viene codificato i
 
 ## Note
 
-- **Perché `uri` e non una notifica AWX.** AWX ha le notifiche di tipo *Webhook*, ma in questa versione (24.6.1) l'interfaccia non permette di salvare un messaggio che legga `job.artifacts`. La stessa chiamata HTTP è stata quindi spostata nel playbook.
+- **Perché `| default('')` nel body della notifica.** Su AWX l'interfaccia non permetteva di salvare un body che leggesse `job.artifacts.*`: al salvataggio il template viene verificato su un job di esempio senza artifacts, e il campo mancante blocca il modulo. Con `default('')` il controllo passa; all'invio reale gli artifacts esistono e vengono usati. Se mancassero, i campi arrivano vuoti e la pipeline si ferma in *Verifica input*.
 - **Sicurezza.** Il token è in chiaro per semplicità.
