@@ -27,7 +27,7 @@
         method: POST
         body_format: json
         body:
-          awx_job_id: "{{ awx_job_id) }}"
+          awx_job_id: "{{ awx_job_id }}"
           filename: "{{ src_path | basename }}"
           content_b64: "{{ java_src.content }}"
         status_code: 200
